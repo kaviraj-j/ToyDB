@@ -5,6 +5,8 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
+	"toydb/pkg/catalog"
 	"toydb/pkg/types"
 )
 
@@ -29,6 +31,44 @@ func NewStore(storagePath string) (*Storage, error) {
 	return &Storage{
 		StoragePath: storagePath,
 	}, err
+}
+
+func (s *Storage) GetCatalog() (catalog.Catalog, error) {
+	databaseNames := make([]string, 0)
+
+	files, err := os.ReadDir(s.StoragePath)
+	if err != nil {
+		return catalog.Catalog{}, err
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		name := file.Name()
+
+		if strings.HasSuffix(name, ".db.json") {
+			dbName := strings.TrimSuffix(name, ".db.json")
+			databaseNames = append(databaseNames, dbName)
+		}
+	}
+
+	var c catalog.Catalog
+	for _, dbName := range databaseNames {
+		db, _ := s.getDB(dbName)
+		dbCatalog := catalog.DatabaseCatalog{
+			Tables: make(map[string]*catalog.TableCatalog),
+		}
+		for tName, schema := range db.Schemas {
+			dbCatalog.Tables[tName] = &catalog.TableCatalog{
+				Name:   tName,
+				Schema: &schema,
+			}
+		}
+		c.Database[dbName] = &dbCatalog
+	}
+	return c, nil
 }
 
 //
