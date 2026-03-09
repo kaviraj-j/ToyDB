@@ -21,8 +21,8 @@ type Database struct {
 }
 
 type Table struct {
-	Name string  `json:"name"`
-	Data [][]any `json:"data"`
+	Name string      `json:"name"`
+	Data []types.Row `json:"data"`
 }
 
 func NewStore(storagePath string) (*Storage, error) {
@@ -116,7 +116,7 @@ func (s *Storage) CreateTable(
 
 	db.Tables = append(db.Tables, Table{
 		Name: tableName,
-		Data: [][]any{},
+		Data: []types.Row{},
 	})
 
 	return s.saveDB(db)
@@ -156,7 +156,7 @@ func (s *Storage) DropTable(databaseName string, tableName string) error {
 func (s *Storage) GetRows(
 	databaseName string,
 	tableName string,
-) ([][]any, error) {
+) ([]types.Row, error) {
 
 	db, err := s.getDB(databaseName)
 	if err != nil {
@@ -171,7 +171,7 @@ func (s *Storage) GetRows(
 	rows := db.Tables[idx].Data
 
 	// return copy (avoid external mutation)
-	out := make([][]any, len(rows))
+	out := make([]types.Row, len(rows))
 	copy(out, rows)
 
 	return out, nil

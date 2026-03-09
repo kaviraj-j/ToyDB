@@ -18,3 +18,5 @@ type Row []any
 type TableSchema struct {
 	Columns []Column `json:"name"`
 }
+
+type Expression any
